@@ -1,0 +1,20 @@
+<div class="powerbi-container">
+  <iframe 
+    width="100%" 
+    height="600" 
+    [src]="powerBIUrl | safeUrl" 
+    frameborder="0" 
+    allowfullscreen="true">
+  </iframe>
+</div>
+<button (click)="usePowerBI = !usePowerBI">
+  {{ usePowerBI ? 'Afficher KPIs Angular' : 'Afficher Power BI' }}
+</button>
+
+<ng-container *ngIf="usePowerBI; else angularKPIs">
+  <app-powerbi-dashboard></app-powerbi-dashboard>
+</ng-container>
+
+<ng-template #angularKPIs>
+  <!-- les composants KPI Angular ici -->
+</ng-template>

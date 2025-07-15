@@ -1,0 +1,94 @@
+<app-menufront></app-menufront>
+<div class="banner-wrapper">
+  <div class="banner-image">
+    <img src="assets/images/backgrounds/walppaperinfo.jpg" alt="Banner">
+    <div class="banner-text">
+      <h1 class="title-small">PROGRAMMES DISPONIBLES</h1>
+      <br>
+      <h2 class="title-big">Formations</h2>
+    </div>
+  </div>
+</div>
+<div class="formation-section">
+  <h2 class="formation-title">DÉCOUVREZ NOS FORMATIONS</h2>
+  <p class="formation-subtitle">Découvrez nos programmes innovants, conçus pour booster vos compétences dans les domaines les plus demandés !</p>
+</div>
+
+  
+
+<br>
+<div class="search-container">
+  <div class="search-item">
+    <label class="search-label"><i class="fa fa-search"></i>Nom de formation</label>
+    
+    <input 
+      type="text" 
+      [(ngModel)]="searchTermNom" 
+      placeholder="Rechercher par nom de formation" 
+      (input)="filterFormations()">
+  </div>
+
+  <div class="search-item">
+    <label class="search-label"><i class="fa fa-calendar"></i>Date de début</label>
+ 
+    <input 
+      type="date" 
+      [(ngModel)]="searchTermDateDebut" 
+      (input)="filterFormations()">
+  </div>
+
+  <div class="search-item">
+    <label class="search-label">  <i class="fa fa-calendar-check"></i>Date de fin</label>
+   
+    <input 
+      type="date" 
+      [(ngModel)]="searchTermDateFin" 
+      (input)="filterFormations()">
+  </div>
+</div>
+
+
+<div class="formations-container">
+  <div class="formation-card" *ngFor="let formation of paginatedFormations">
+
+    <img [src]="'http://localhost:8085/api/micro-formation/get-file/' + formation.image.replace('/downloadFile/','')" alt="Image de la formation" class="formation-image" />
+    <div class="card-content">
+      <h2>{{ formation.formationNom }}</h2>
+      <p class="description">{{ formation.description }}</p>
+      <p class="dates">
+        📅 Du {{ formation.dateDebut | date: 'shortDate' }}
+      </p>
+      
+
+      <div class="button-wrapper">
+        <button 
+          pButton 
+          type="button" 
+          icon="pi pi-info-circle" 
+          label="Détails"
+          class="custom-button"
+          (click)="showFormationDetails(formation)">
+        </button>
+      </div>
+      
+
+    </div>
+  </div>
+</div>
+
+<div class="pagination">
+  <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+    Précédent
+  </button>
+
+  <span>Page {{ currentPage }} / {{ totalPages }}</span>
+
+  <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+    Suivant
+  </button>
+</div>
+<br>
+
+
+      <app-showactualitedetailoffice #formationDetailsModal></app-showactualitedetailoffice>
+<app-footer></app-footer>

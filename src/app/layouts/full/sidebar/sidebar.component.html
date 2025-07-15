@@ -1,0 +1,12 @@
+<div class="flex-layout">
+  <app-branding></app-branding>
+  <mat-nav-list class="sidebar-list">
+    <app-nav-item *ngFor="let item of navItems" [item]="item"> </app-nav-item>
+  </mat-nav-list>
+  <div class="p-24">
+   
+  </div>
+</div>
+<a routerLink="/kpi-collaborateur">👤 Collaborateur</a>
+<a routerLink="/kpi-manager">👨‍💼 Manager</a>
+<a routerLink="/kpi-rh">🏢 Ressources Humaines</a>

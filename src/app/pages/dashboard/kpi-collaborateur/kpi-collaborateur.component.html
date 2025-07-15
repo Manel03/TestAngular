@@ -1,0 +1,194 @@
+<div id="pdfContent">
+  <div id="kpiSection">
+    <!-- 📊 Titre principal -->
+    <h2 style="text-align: left">📊 KPIs - Collaborateur</h2>
+
+    <!-- 🔍 Filtres -->
+    <div class="filters-container">
+      <div class="category-buttons">
+        <button *ngFor="let cat of categories"
+                (click)="setCategory(cat)"
+                [class.active]="selectedCategory === cat">
+          {{ cat }}
+        </button>
+      </div>
+      <div class="filter-selects">
+        <label>
+          🗓 Période :
+          <select [(ngModel)]="selectedPeriod">
+            <option value="7">7 derniers jours</option>
+            <option value="30">30 derniers jours</option>
+            <option value="90">3 derniers mois</option>
+          </select>
+        </label>
+
+        <label>
+          📂 Catégorie :
+          <select [(ngModel)]="selectedCategory">
+            <option value="">Toutes</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+        </label>
+
+        <button class="view-toggle-button" (click)="toggleView()">
+          {{ viewMode === 'cards' ? '📋 Voir en tableau' : '🧾 Voir en cartes' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 📊 Vue cartes -->
+    <div *ngIf="viewMode === 'cards'" class="kpi-row" @fadeInOut>
+      <div class="kpi-card" matTooltip="92% des collaborateurs reviennent suivre une formation">
+        🔁 <strong>Rétention :</strong> 92%
+      </div>
+      <div class="kpi-card" matTooltip="Les collaborateurs suivent une formation toutes les 7 jours en moyenne">
+        ⏳ <strong>Temps moyen entre formations :</strong> 7 jours
+      </div>
+      <div class="kpi-card" matTooltip="Amélioration globale sur les derniers mois">
+        📈 <strong>Progression globale :</strong> +12%
+      </div>
+      <div class="kpi-card" matTooltip="Score basé sur les évaluations des formations">
+        🧠 <strong>Score d’évaluation :</strong> 76/100
+      </div>
+      <div class="kpi-card" matTooltip="Nombre moyen de formations suivies par mois">
+        📆 <strong>Fréquence mensuelle :</strong> 3.4 formations
+      </div>
+      <div class="kpi-card" matTooltip="Une formation est restée incomplète">
+        🔔 <strong>Formations incomplètes :</strong> 1
+      </div>
+    </div>
+
+    <!-- 📋 Vue tableau -->
+    <div *ngIf="viewMode === 'table'" class="kpi-table-container" @fadeInOut>
+      <table class="kpi-table">
+        <thead>
+          <tr>
+            <th>Indicateur</th>
+            <th>Valeur</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🔁 Rétention</td>
+            <td>92%</td>
+            <td>92% des collaborateurs reviennent suivre une formation</td>
+          </tr>
+          <tr>
+            <td>⏳ Temps moyen entre formations</td>
+            <td>7 jours</td>
+            <td>Délai moyen entre deux formations</td>
+          </tr>
+          <tr>
+            <td>📈 Progression globale</td>
+            <td>+12%</td>
+            <td>Amélioration moyenne du parcours de formation</td>
+          </tr>
+          <tr>
+            <td>🧠 Score d’évaluation</td>
+            <td>76/100</td>
+            <td>Basé sur les notes données en fin de formation</td>
+          </tr>
+          <tr>
+            <td>📆 Fréquence mensuelle</td>
+            <td>3.4 formations</td>
+            <td>Nombre moyen de formations mensuelles</td>
+          </tr>
+          <tr>
+            <td>🔔 Formations incomplètes</td>
+            <td>1</td>
+            <td>Formations non finalisées par le collaborateur</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 🔍 KPIs Supplémentaires -->
+    <h3 class="kpi-sup-title">🔍 KPIs Supplémentaires</h3>
+    <div class="kpi-row fade-in">
+      <div class="kpi-card" *ngFor="let kpi of kpiFiltres">
+        {{ kpi.icon }} <strong>{{ kpi.label }} :</strong> {{ kpi.value }}
+      </div>
+    </div>
+
+    <!-- 📈 Progression mensuelle -->
+    <div class="chart-container">
+      <h3>📈 Progression mensuelle</h3>
+      <div id="completionChart" echarts [options]="completionChart" class="chart"></div>
+    </div>
+
+    <!-- 😊 Taux de satisfaction -->
+    <div class="chart-container">
+      <h3>😊 Taux de satisfaction</h3>
+      <div id="satisfactionChart" echarts [options]="satisfactionChart" class="chart"></div>
+    </div>
+
+    <!-- 🎯 Score global et vue dynamique -->
+    <button (click)="toggleView2()">
+      🔁 Changer de vue : {{ viewMode2 === 'detailed' ? 'Camembert' : 'Détail' }}
+    </button>
+
+    <!-- Vue camembert -->
+    <div *ngIf="viewMode2 === 'pie'" style="margin-top: 20px;">
+      <div echarts [options]="pieOption" style="height: 300px;"></div>
+    </div>
+
+    <!-- Vue détaillée : score + barres -->
+    <div *ngIf="viewMode2 === 'detailed'">
+      <div class="score-block">
+        <p>🎯 <strong>Score global</strong> : {{ score.valeur }}/100</p>
+        <p>
+          Seuil attendu : {{ score.seuil }} —
+          <span [ngClass]="{ 'text-ok': score.valeur >= score.seuil, 'text-ko': score.valeur < score.seuil }">
+            {{ score.valeur >= score.seuil ? '✅ OK' : '⚠️ À améliorer' }}
+          </span>
+        </p>
+      </div>
+
+      <div class="module-block">
+        <h4>🕒 Temps passé par module</h4>
+        <div *ngFor="let module of tempsParModule" class="module-item">
+          <div class="module-header">
+            <strong>{{ module.nom }} ({{ module.temps }}h / {{ module.objectif }}h)</strong>
+            <span [ngClass]="{
+              'badge-ok': module.temps >= module.objectif,
+              'badge-warning': module.temps < module.objectif
+            }">
+              {{ module.temps >= module.objectif ? '✅ OK' : '⚠️ À surveiller' }}
+            </span>
+          </div>
+
+          <div class="bar-container">
+            <div
+              class="bar"
+              [style.width.%]="(module.temps / module.objectif) * 100"
+              [ngClass]="{
+                'bar-ok': module.temps >= module.objectif,
+                'bar-warning': module.temps < module.objectif && module.temps >= module.objectif / 2,
+                'bar-critical': module.temps < module.objectif / 2
+              }"
+            ></div>
+          </div>
+
+          <div *ngIf="module.temps < module.objectif" class="reco">
+            📘 Suggestion : <i>Planifier 1h par semaine pour {{ module.nom.toLowerCase() }}.</i>
+            <br />
+            <button class="btn-mini">🔁 Améliorer ce module</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📄 Résumé exportable -->
+      <div class="export-box">
+        📄 <strong>Résumé exportable</strong><br />
+        Modules à surveiller :
+        <span *ngIf="getModulesASurveiller().length > 0">
+          {{ getModulesASurveiller().join(', ') }}
+        </span>
+        <span *ngIf="getModulesASurveiller().length === 0">Aucun ✅</span>
+        <br />
+        Recommandation : renforcer les modules en retard avant la fin du trimestre.
+      </div>
+    </div>
+  </div>
+</div>
