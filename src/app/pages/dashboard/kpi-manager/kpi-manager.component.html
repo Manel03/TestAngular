@@ -1,15 +1,72 @@
-<div id="pdfContent">
- <h2>🧑‍💼 KPIs - Manager</h2>
+<div class="kpi-manager-container">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <span class="title-icon">👨‍💼</span>
+        Tableau de Bord Manager - KPIs
+      </h1>
+      <p class="dashboard-subtitle">Vue d'ensemble des performances des gestionnaires</p>
+    </div>
 
-<div class="kpi-section">
-  <div class="kpi-card">👥 Équipe formée : 67%</div>
-  <div class="kpi-card">📈 Progression moyenne : 75%</div>
-  <div class="kpi-card">⏳ Temps total de formation (équipe) : 145 h</div>
-  <div class="kpi-card">📊 Feedback global : 4.3 / 5</div>
-</div>
+    <div class="header-actions">
+      <button class="action-btn primary" (click)="exportToExcel()">
+        <span class="btn-icon">📊</span>
+        Exporter Excel
+      </button>
+      <button class="action-btn secondary" (click)="exportToPDF()">
+        <span class="btn-icon">📄</span>
+        Rapport PDF
+      </button>
+    </div>
+  </div>
 
-<div class="charts-section">
-  <div echarts [options]="teamCompletionChart" class="chart"></div>
-  <div echarts [options]="feedbackChart" class="chart"></div>
-</div>
+  <!-- KPI Cards Grid -->
+  <div class="kpi-grid">
+    <div *ngFor="let kpi of managerKPIs" class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon-container">
+          <span class="kpi-icon">{{ kpi.icon }}</span>
+        </div>
+        <div class="kpi-trend">
+          <span class="trend-value" [class]="'trend-' + kpi.trend">
+            {{ kpi.trendValue > 0 ? '+' : '' }}{{ kpi.trendValue }}%
+          </span>
+        </div>
+      </div>
+
+      <div class="kpi-content">
+        <h3 class="kpi-title">{{ kpi.label }}</h3>
+        <div class="kpi-value-container">
+          <span class="kpi-value">{{ kpi.value }}{{ kpi.unit }}</span>
+          <span class="kpi-target">Objectif: {{ kpi.target }}{{ kpi.unit }}</span>
+        </div>
+
+        <div class="kpi-progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="(kpi.value / kpi.target) * 100"
+            [class.exceeded]="kpi.value > kpi.target">
+          </div>
+        </div>
+        
+        <p class="kpi-description">{{ kpi.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="charts-grid">
+      <!-- Place your chart components here -->
+      <div class="chart-container">
+        <h2>Performance des KPIs</h2>
+        <div echarts [options]="globalCompletionChart" class="chart"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Comparaison des Départements</h2>
+        <div echarts [options]="departmentComparisonChart" class="chart"></div>
+      </div>
+      <!-- Add more charts as needed -->
+    </div>
+  </div>
 </div>

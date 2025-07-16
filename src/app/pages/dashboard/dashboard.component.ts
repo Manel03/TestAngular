@@ -6,7 +6,6 @@ import * as ExcelJS from 'exceljs/dist/exceljs.min.js';
 import * as FileSaver from 'file-saver';
 import html2pdf from 'html2pdf.js';
 
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -75,22 +74,6 @@ export class DashboardComponent {
     this.endDate = '';
   }
 
-
-exportToPDF() {
-  const element = document.getElementById('kpiSection');
-  if (!element) return;
-
-  const opt = {
-    margin:       0,
-    filename:     'kpis-collaborateur.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  html2pdf().set(opt).from(element).save();
-}
-
 async exportToExcelWithCharts() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('KPI Formation');
@@ -156,4 +139,47 @@ selectRole(role: 'collaborateur' | 'manager' | 'rh') {
   this.selectedRole = role;
 }
 
+  // Export to PDF function
+  exportToPDF(): void {
+    const element = document.getElementById('pdfContent');
+    if (!element) return;
+
+    const opt = {
+      margin:       0,
+      filename:     'dashboard_kpi.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  }
+
+  // Export to Excel function
+  async exportToExcel(): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('KPI Dashboard');
+
+    // Add header row
+    worksheet.addRow([
+      'Taux de complétion',
+      'Durée moyenne',
+      'Temps actif',
+      'Score moyen',
+      'Formations suivies'
+    ]);
+    
+    // Add data row
+    worksheet.addRow([
+      `${this.completionRate}%`,
+      this.averageDuration,
+      this.activeTime,
+      `${this.averageScore}/100`,
+      this.totalCourses
+    ]);
+
+    // Saving the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    FileSaver.saveAs(new Blob([buffer]), 'dashboard_kpi.xlsx');
+  }
 }

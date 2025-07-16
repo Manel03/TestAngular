@@ -1,17 +1,179 @@
 
-<div id="pdfContent">
-  <h2>🏢 KPIs - Ressources Humaines</h2>
+<div class="kpi-rh-container">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <span class="title-icon">🏢</span>
+        Tableau de Bord RH - KPIs Formation
+      </h1>
+      <p class="dashboard-subtitle">Vue d'ensemble des performances de formation de l'organisation</p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="action-btn primary" (click)="exportToExcel()">
+        <span class="btn-icon">📊</span>
+        Exporter Excel
+      </button>
+      <button class="action-btn secondary" (click)="exportToPDF()">
+        <span class="btn-icon">📄</span>
+        Rapport PDF
+      </button>
+    </div>
+  </div>
 
-<div class="kpi-section">
-  <div class="kpi-card">📋 Formations disponibles : 34</div>
-  <div class="kpi-card">🧑‍🏫 Taux de participation global : 76%</div>
-  <div class="kpi-card">📅 Moyenne de formations mensuelles : 10</div>
-  <div class="kpi-card">🎯 Alignement sur objectifs métiers : 89%</div>
-</div>
+  <!-- Global KPIs Summary -->
+  <div class="kpi-summary-section">
+    <div class="summary-stats">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <h3>{{ totalCollaborators }}</h3>
+          <p>Collaborateurs Total</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <h3>{{ averageCompletionRate }}%</h3>
+          <p>Taux Moyen Complétion</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-content">
+          <h3>{{ averageTimeBetweenTrainings }}j</h3>
+          <p>Temps Moyen entre Formations</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+          <h3>5</h3>
+          <p>Départements Actifs</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="charts-section">
-  <div echarts [options]="globalParticipationChart" class="chart"></div>
-  <div echarts [options]="monthlyTrainingsChart" class="chart"></div>
-</div>
-</div>
+  <!-- KPI Cards Grid -->
+  <div class="kpi-grid">
+    <div *ngFor="let kpi of rhKPIs" class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon-container">
+          <span class="kpi-icon">{{ kpi.icon }}</span>
+        </div>
+        <div class="kpi-trend">
+          <span class="trend-value" [class]="'trend-' + kpi.trend">
+            {{ kpi.trendValue > 0 ? '+' : '' }}{{ kpi.trendValue }}%
+          </span>
+        </div>
+      </div>
+      
+      <div class="kpi-content">
+        <h3 class="kpi-title">{{ kpi.label }}</h3>
+        <div class="kpi-value-container">
+          <span class="kpi-value">{{ kpi.value }}{{ kpi.unit }}</span>
+          <span class="kpi-target">Objectif: {{ kpi.target }}{{ kpi.unit }}</span>
+        </div>
+        
+        <div class="kpi-progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="(kpi.value / kpi.target) * 100"
+            [class.exceeded]="kpi.value > kpi.target"
+            [class.warning]="kpi.id === 'at-risk-collaborators' && kpi.value > kpi.target">
+          </div>
+        </div>
+        
+        <p class="kpi-description">{{ kpi.description }}</p>
+      </div>
+    </div>
+  </div>
 
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="charts-grid">
+      <!-- Row 1 -->
+      <div class="chart-container">
+        <div echarts [options]="globalCompletionChart" class="chart"></div>
+      </div>
+      <div class="chart-container">
+        <div echarts [options]="departmentComparisonChart" class="chart"></div>
+      </div>
+      
+      <!-- Row 2 -->
+      <div class="chart-container">
+        <div echarts [options]="progressTrendChart" class="chart"></div>
+      </div>
+      <div class="chart-container">
+        <div echarts [options]="participationFrequencyChart" class="chart"></div>
+      </div>
+      
+      <!-- Row 3 -->
+      <div class="chart-container">
+        <div echarts [options]="topThemesChart" class="chart"></div>
+      </div>
+      <div class="chart-container">
+        <div echarts [options]="retentionChart" class="chart"></div>
+      </div>
+      
+      <!-- Row 4 -->
+      <div class="chart-container full-width">
+        <div echarts [options]="geographicChart" class="chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts Section -->
+  <div class="alerts-section">
+    <h3 class="section-title">⚠️ Alertes - Collaborateurs à Risque / Inactifs</h3>
+    <div class="alerts-grid">
+      <div *ngFor="let collaborator of alertCollaborators" class="alert-card">
+        <div class="alert-header">
+          <span class="collaborator-name">{{ collaborator.name }}</span>
+          <span class="alert-badge" [class]="collaborator.status">
+            {{ getStatusLabel(collaborator.status) }}
+          </span>
+        </div>
+        <div class="alert-details">
+          <p><strong>Département:</strong> {{ collaborator.department }}</p>
+          <p><strong>Taux de complétion:</strong> {{ collaborator.completionRate }}%</p>
+          <p><strong>Dernière activité:</strong> {{ getDaysInactive(collaborator.lastActivity) }} jours</p>
+        </div>
+        <div class="alert-actions">
+          <button class="contact-btn" (click)="contactCollaborator(collaborator.id)">
+            📞 Contacter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Performance Table -->
+  <div class="department-table-section">
+    <h3 class="section-title">📊 Performance par Département</h3>
+    <div class="table-container">
+      <table class="performance-table">
+        <thead>
+          <tr>
+            <th>Département</th>
+            <th>Taux Complétion</th>
+            <th>Score Moyen</th>
+            <th>Participation</th>
+            <th>Rétention</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let dept of departmentData">
+            <td class="department-name">{{ dept.name }}</td>
+            <td class="metric-value">{{ dept.completionRate }}%</td>
+            <td class="metric-value">{{ dept.avgScore }}/100</td>
+            <td class="metric-value">{{ dept.participation }}%</td>
+            <td class="metric-value">{{ dept.retention }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

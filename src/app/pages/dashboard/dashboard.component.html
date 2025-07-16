@@ -15,12 +15,6 @@
     <h2>Tableau de bord des formations</h2>
     <h3>Mon Dashboard</h3>
 
-    <!-- Boutons d’export TOUJOURS ici -->
-    <div class="export-buttons">
-      <button (click)="exportToExcelWithCharts()">📈 Exporter en Excel</button>
-      <button (click)="exportToPDF()">📄 Exporter en PDF</button>
-    </div>
-
     <!-- Changement de vue dynamique -->
     <ng-container [ngSwitch]="selectedRole">
       <app-kpi-collaborateur *ngSwitchCase="'collaborateur'"></app-kpi-collaborateur>
