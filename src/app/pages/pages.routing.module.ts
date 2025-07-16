@@ -5,14 +5,9 @@ import { KpiManagerComponent } from './dashboard/kpi-manager/kpi-manager.compone
 import { KpiRhComponent } from './dashboard/kpi-rh/kpi-rh.component';
 
 export const PagesRoutes: Routes = [
-  { 
-    path: 'dashboard',
-    component: DashboardComponent,
-    children: [
-      { path: 'kpi-collaborateur', component: KpiCollaborateurComponent },
-      { path: 'kpi-manager', component: KpiManagerComponent },
-      { path: 'kpi-rh', component: KpiRhComponent },
-      { path: '', redirectTo: 'collaborateur', pathMatch: 'full' }
-    ]
-  }
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'kpi-collaborateur', component: KpiCollaborateurComponent },
+  { path: 'kpi-manager', component: KpiManagerComponent },
+  { path: 'kpi-rh', component: KpiRhComponent },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];

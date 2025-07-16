@@ -1,26 +1,18 @@
 <div class="dashboard-container">
-
   <!-- KPI Vues -->
   <div class="kpi-vues">
     <h3>KPI Vues</h3>
     <ul>
-      <li (click)="selectRole('collaborateur')" [class.active]="selectedRole === 'collaborateur'">👤 Collaborateur</li>
-      <li (click)="selectRole('manager')" [class.active]="selectedRole === 'manager'">👥 Manager</li>
-      <li (click)="selectRole('rh')" [class.active]="selectedRole === 'rh'">📊 RH</li>
+      <li routerLink="/kpi-collaborateur">👤 Collaborateur</li>
+      <li routerLink="/kpi-manager">👥 Manager</li>
+      <li routerLink="/kpi-rh">📊 RH</li>
     </ul>
   </div>
 
-  <!-- CONTENU DU DASHBOARD -->
+  <!-- Contenu du dashboard -->
   <div class="dashboard-main" id="pdfContent">
     <h2>Tableau de bord des formations</h2>
     <h3>Mon Dashboard</h3>
-
-    <!-- Changement de vue dynamique -->
-    <ng-container [ngSwitch]="selectedRole">
-      <app-kpi-collaborateur *ngSwitchCase="'collaborateur'"></app-kpi-collaborateur>
-      <app-kpi-manager *ngSwitchCase="'manager'"></app-kpi-manager>
-      <app-kpi-rh *ngSwitchCase="'rh'"></app-kpi-rh>
-    </ng-container>
+    <router-outlet></router-outlet>
   </div>
-
 </div>

@@ -152,6 +152,7 @@ export class KpiRhComponent implements OnInit {
       completionRate: 52
     }
   ];
+    activeDepartments: number = this.departmentData.filter(dept => dept.retention >= 75).length; // Example logic to count active departments
 
   ngOnInit(): void {
     this.initializeCharts();
@@ -381,4 +382,5 @@ export class KpiRhComponent implements OnInit {
   get averageTimeBetweenTrainings(): number {
     return 18; // days - could be calculated from real data
   }
+
 }
