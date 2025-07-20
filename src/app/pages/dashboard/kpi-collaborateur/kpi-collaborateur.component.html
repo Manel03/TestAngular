@@ -1,265 +1,376 @@
 
-<div class="kpi-dashboard-container">
-  <!-- Header Section -->
-  <div class="dashboard-header" @fadeInOut>
+<div class="lms-collaborateur-container">
+  <!-- Header avec navigation -->
+  <div class="lms-header">
     <div class="header-content">
       <h1 class="dashboard-title">
-        <span class="title-icon">📊</span>
-        Tableau de Bord Collaborateur
+        <span class="title-icon">🎓</span>
+        Mon Espace Apprentissage LMS
       </h1>
-      <p class="dashboard-subtitle">Suivi personnalisé de votre parcours e-learning</p>
+      <p class="dashboard-subtitle">Tableau de bord personnalisé pour votre parcours de formation</p>
     </div>
     
     <div class="header-actions">
-      <button class="action-btn primary" (click)="exportData()">
-        <span class="btn-icon">📄</span>
-        Exporter
+      <button class="action-btn notifications" (click)="toggleNotifications()" 
+              [class.active]="showNotifications">
+        <span class="btn-icon">🔔</span>
+        Notifications
+        <span *ngIf="urgentAlerts.length > 0" class="badge">{{ urgentAlerts.length }}</span>
       </button>
-      <button class="action-btn secondary" (click)="scheduleReview()">
-        <span class="btn-icon">📅</span>
-        Planifier Révision
+      <button class="action-btn primary" (click)="exportProgress()">
+        <span class="btn-icon">📊</span>
+        Mon Rapport
+      </button>
+      <button class="action-btn secondary" (click)="enableNotifications()">
+        <span class="btn-icon">⚙️</span>
+        Paramètres
       </button>
     </div>
   </div>
 
-  <!-- Control Panel -->
-  <div class="control-panel" @slideIn>
-    <div class="filters-section">
-      <div class="filter-group">
-        <label class="filter-label">📅 Période</label>
-        <select [(ngModel)]="selectedPeriod" class="filter-select">
-          <option value="7">7 derniers jours</option>
-          <option value="30">30 derniers jours</option>
-          <option value="90">3 derniers mois</option>
-          <option value="365">Année complète</option>
-        </select>
-      </div>
-      
-      <div class="category-filters">
-        <button 
-          *ngFor="let cat of categories"
-          (click)="setCategory(cat.name)"
-          [class.active]="selectedCategory === cat.name"
-          [style.--category-color]="cat.color"
-          class="category-btn">
-          <span class="category-icon">{{ cat.icon }}</span>
-          {{ cat.name }}
-        </button>
-      </div>
-    </div>
+  <!-- Navigation du dashboard -->
+  <div class="dashboard-nav">
+    <button 
+      (click)="setViewMode('dashboard')"
+      [class.active]="viewMode === 'dashboard'"
+      class="nav-btn">
+      <span class="nav-icon">🏠</span>
+      Tableau de Bord
+    </button>
+    <button 
+      (click)="setViewMode('progress')"
+      [class.active]="viewMode === 'progress'"
+      class="nav-btn">
+      <span class="nav-icon">📈</span>
+      Mes Progrès
+    </button>
+    <button 
+      (click)="setViewMode('recommendations')"
+      [class.active]="viewMode === 'recommendations'"
+      class="nav-btn">
+      <span class="nav-icon">🤖</span>
+      Recommandations IA
+    </button>
+    <button 
+      (click)="setViewMode('goals')"
+      [class.active]="viewMode === 'goals'"
+      class="nav-btn">
+      <span class="nav-icon">🎯</span>
+      Mes Objectifs
+    </button>
+  </div>
 
-    <div class="view-controls">
-      <div class="view-toggle">
-        <button 
-          (click)="toggleView()" 
-          class="toggle-btn"
-          [attr.data-view]="viewMode">
-          {{ viewMode === 'dashboard' ? '📊 Tableau de Bord' : 
-             viewMode === 'cards' ? '🃏 Vue Cartes' : '📋 Vue Tableau' }}
-        </button>
+  <!-- Alertes et notifications -->
+  <div *ngIf="showNotifications || urgentAlerts.length > 0" class="alerts-panel">
+    <h3 class="alerts-title">🚨 Alertes Importantes</h3>
+    <div class="alerts-grid">
+      <div *ngFor="let alert of learningAlerts" 
+           class="alert-card"
+           [style.border-left-color]="getAlertPriorityColor(alert.priority)">
+        <div class="alert-header">
+          <span class="alert-type">
+            {{ alert.type === 'deadline' ? '⏰' : 
+               alert.type === 'new-available' ? '🆕' : 
+               alert.type === 'incomplete' ? '📋' : '🔔' }}
+          </span>
+          <h4>{{ alert.title }}</h4>
+          <button class="dismiss-btn" (click)="dismissAlert(alert.id)">✕</button>
+        </div>
+        <p class="alert-message">{{ alert.message }}</p>
+        <div *ngIf="alert.dueDate" class="alert-deadline">
+          <span class="deadline-label">Échéance:</span>
+          <span class="deadline-value">{{ getDaysUntil(alert.dueDate) }} jours</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Dashboard View -->
-  <div *ngIf="viewMode === 'dashboard'" class="dashboard-view" @fadeInOut>
-    <!-- KPI Summary Cards -->
+  <!-- Vue Dashboard Principal -->
+  <div *ngIf="viewMode === 'dashboard'" class="dashboard-view">
+    <!-- KPI Cards -->
     <div class="kpi-summary-grid">
-      <div 
-        *ngFor="let kpi of filteredKpiMetrics; trackBy: trackKpiById" 
-        class="kpi-summary-card"
-        @scaleIn>
+      <div *ngFor="let kpi of kpiMetrics" class="kpi-card">
         <div class="kpi-header">
-          <div class="kpi-icon-container">
-            <span class="kpi-icon">{{ kpi.icon }}</span>
-          </div>
+          <span class="kpi-icon">{{ kpi.icon }}</span>
           <div class="kpi-trend">
-            <span class="trend-icon">{{ getTrendIcon(kpi.trend) }}</span>
             <span class="trend-value" [class]="'trend-' + kpi.trend">
               {{ kpi.trendValue > 0 ? '+' : '' }}{{ kpi.trendValue }}%
             </span>
           </div>
         </div>
-        
         <div class="kpi-content">
-          <h3 class="kpi-title">{{ kpi.label }}</h3>
-          <div class="kpi-value-container">
-            <span class="kpi-value">{{ kpi.value }}{{ kpi.unit }}</span>
-            <span class="kpi-target">Objectif: {{ kpi.target }}{{ kpi.unit }}</span>
-          </div>
-          
-          <div class="kpi-progress-bar">
-            <div 
-              class="progress-fill" 
-              [style.width.%]="(kpi.value / kpi.target) * 100"
-              [class.exceeded]="kpi.value > kpi.target">
-            </div>
-          </div>
-          
-          <p class="kpi-description">{{ kpi.description }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="charts-section">
-      <div class="chart-controls">
-        <button (click)="toggleChartView()" class="chart-toggle-btn">
-          {{ chartView === 'detailed' ? '📊 Vue Détaillée' : '📈 Vue Résumé' }}
-        </button>
-      </div>
-
-      <div *ngIf="chartView === 'detailed'" class="detailed-charts">
-        <div class="chart-grid">
-          <div class="chart-container">
-            <div echarts [options]="progressChart" class="chart"></div>
-          </div>
-          
-          <div class="chart-container">
-            <div echarts [options]="skillsRadarChart" class="chart"></div>
-          </div>
-          
-          <div class="chart-container">
-            <div echarts [options]="timeDistributionChart" class="chart"></div>
-          </div>
-          
-          <div class="chart-container">
-            <div echarts [options]="performanceTrendChart" class="chart"></div>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="chartView === 'summary'" class="summary-charts">
-        <div class="summary-grid">
-          <div class="chart-container large">
-            <div echarts [options]="performanceTrendChart" class="chart"></div>
-          </div>
-          <div class="chart-container">
-            <div echarts [options]="timeDistributionChart" class="chart"></div>
+          <h3>{{ kpi.label }}</h3>
+          <div class="kpi-value">{{ kpi.value }}{{ kpi.unit }}</div>
+          <div class="kpi-target">Objectif: {{ kpi.target }}{{ kpi.unit }}</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(kpi.value / kpi.target) * 100"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Learning Modules Section -->
-    <div class="modules-section">
-      <h2 class="section-title">
-        <span class="title-icon">📚</span>
-        Modules d'Apprentissage
-      </h2>
-      
+    <!-- Prochaines Sessions -->
+    <div class="upcoming-sessions-section">
+      <h3 class="section-title">📅 Prochaines Sessions</h3>
+      <div class="sessions-grid">
+        <div *ngFor="let session of upcomingSessions" class="session-card">
+          <div class="session-header">
+            <span class="session-type">
+              {{ session.type === 'webinar' ? '🎥' : 
+                 session.type === 'workshop' ? '🛠️' : 
+                 session.type === 'exam' ? '📝' : '👥' }}
+            </span>
+            <h4>{{ session.title }}</h4>
+            <span class="session-status" [class]="session.status">{{ session.status }}</span>
+          </div>
+          <div class="session-details">
+            <p><strong>Date:</strong> {{ session.date | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>Durée:</strong> {{ formatDuration(session.duration) }}</p>
+            <p><strong>Formateur:</strong> {{ session.instructor }}</p>
+            <p><strong>Dans:</strong> {{ getDaysUntil(session.date) }} jours</p>
+          </div>
+          <button class="join-btn" (click)="joinSession(session.id)">
+            Rejoindre
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules en cours -->
+    <div class="active-modules-section">
+      <h3 class="section-title">📚 Mes Formations en Cours</h3>
       <div class="modules-grid">
-        <div 
-          *ngFor="let module of filteredLearningModules; trackBy: trackModuleById" 
-          class="module-card"
-          @scaleIn>
+        <div *ngFor="let module of learningModules | slice:0:4" class="module-card">
           <div class="module-header">
-            <div class="module-info">
-              <h3 class="module-title">{{ module.name }}</h3>
-              <div class="module-meta">
-                <span class="difficulty-badge">
-                  {{ getDifficultyIcon(module.difficulty) }}
-                  {{ module.difficulty }}
-                </span>
-                <span class="category-badge" [style.background-color]="getCategoryColor(module.category)">
-                  {{ module.category }}
-                </span>
-              </div>
-            </div>
-            
-            <div class="module-status" [style.color]="getStatusColor(module.status)">
-              <span class="status-dot" [style.background-color]="getStatusColor(module.status)"></span>
-              {{ getStatusLabel(module.status) }}
-            </div>
+            <h4>{{ module.name }}</h4>
+            <span class="module-status" [style.background-color]="getModuleStatusColor(module.status)">
+              {{ module.status }}
+            </span>
           </div>
-          
           <div class="module-progress">
             <div class="progress-info">
-              <span class="progress-label">Progression</span>
-              <span class="progress-percentage">{{ module.progress }}%</span>
+              <span>{{ module.progress }}%</span>
+              <span>{{ module.timeSpent }}h / {{ module.targetTime }}h</span>
             </div>
             <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                [style.width.%]="module.progress"
-                [style.background-color]="getStatusColor(module.status)">
-              </div>
+              <div class="progress-fill" [style.width.%]="module.progress"></div>
+            </div>
+          </div>
+          <div class="module-actions">
+            <button *ngIf="module.status === 'not-started'" 
+                    class="start-btn" (click)="startModule(module.id)">
+              Commencer
+            </button>
+            <button *ngIf="module.status === 'in-progress'" 
+                    class="continue-btn" (click)="startModule(module.id)">
+              Continuer
+            </button>
+            <button *ngIf="module.score" 
+                    class="quiz-btn" (click)="takeQuiz(module.id)">
+              Quiz ({{ module.score }}/100)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges de Performance -->
+    <div class="badges-section">
+      <h3 class="section-title">🏆 Mes Badges de Performance</h3>
+      <div class="badges-grid">
+        <div *ngFor="let badge of performanceBadges" class="badge-card">
+          <div class="badge-icon" [style.background-color]="badge.color">
+            {{ badge.icon }}
+          </div>
+          <h4>{{ badge.name }}</h4>
+          <p>{{ badge.description }}</p>
+          <small>Obtenu le {{ badge.earnedDate | date:'dd/MM/yyyy' }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Progrès Détaillés -->
+  <div *ngIf="viewMode === 'progress'" class="progress-view">
+    <!-- Statistiques personnelles -->
+    <div class="personal-stats">
+      <div class="stat-card">
+        <h3>{{ totalLearningHours }}h</h3>
+        <p>Temps total d'apprentissage</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ personalCompletionRate }}%</h3>
+        <p>Taux de complétion</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ averageScore }}/100</h3>
+        <p>Score moyen aux évaluations</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ performanceBadges.length }}</h3>
+        <p>Badges obtenus</p>
+      </div>
+    </div>
+
+    <!-- Graphiques de progression -->
+    <div class="charts-section">
+      <div class="charts-grid">
+        <div class="chart-container">
+          <div echarts [options]="progressChart" class="chart"></div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="skillsRadarChart" class="chart"></div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="performanceTrendChart" class="chart"></div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="comparisonChart" class="chart"></div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="timeDistributionChart" class="chart"></div>
+        </div>
+        <div class="chart-container">
+          <div echarts [options]="learningPathChart" class="chart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Recommandations IA -->
+  <div *ngIf="viewMode === 'recommendations'" class="recommendations-view">
+    <div class="ai-intro">
+      <h3>🤖 Recommandations Intelligentes</h3>
+      <p>Nos algorithmes d'IA analysent vos performances, vos préférences et les tendances du marché pour vous proposer des formations personnalisées.</p>
+    </div>
+
+    <div class="recommendations-grid">
+      <div *ngFor="let rec of smartRecommendations" class="recommendation-card">
+        <div class="rec-header">
+          <span class="rec-type-icon">{{ getRecommendationTypeIcon(rec.type) }}</span>
+          <div class="rec-info">
+            <h4>{{ rec.title }}</h4>
+            <span class="rec-confidence">{{ rec.confidence }}% de confiance</span>
+          </div>
+          <div class="ai-score">
+            <span class="score-label">Score IA</span>
+            <span class="score-value">{{ rec.aiScore }}/100</span>
+          </div>
+        </div>
+        
+        <div class="rec-content">
+          <p class="rec-description">{{ rec.description }}</p>
+          <div class="rec-reason">
+            <strong>Pourquoi cette recommandation :</strong>
+            <p>{{ rec.reason }}</p>
+          </div>
+          
+          <div class="rec-details">
+            <div class="detail-item">
+              <span class="label">Durée estimée:</span>
+              <span class="value">{{ rec.estimatedDuration }}h</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Niveau:</span>
+              <span class="value">{{ rec.difficulty }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Type:</span>
+              <span class="value">{{ rec.type }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="rec-actions">
+          <button class="accept-btn" (click)="acceptRecommendation(rec.id)">
+            Ajouter à mes formations
+          </button>
+          <button class="more-info-btn">
+            Plus d'infos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analyse prédictive -->
+    <div class="predictive-analysis">
+      <h3>📊 Analyse Prédictive</h3>
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <h4>🎯 Prédiction des Besoins</h4>
+          <p>Basé sur votre progression actuelle, vous aurez besoin de formations en <strong>DevOps</strong> et <strong>Architecture Cloud</strong> dans les 3 prochains mois.</p>
+        </div>
+        <div class="analysis-card">
+          <h4>👥 Profil Similaire</h4>
+          <p>Les collaborateurs avec un profil similaire au vôtre ont eu <strong>92% de succès</strong> avec les formations en microservices.</p>
+        </div>
+        <div class="analysis-card">
+          <h4>📈 Impact Carrière</h4>
+          <p>Compléter votre parcours actuel pourrait augmenter vos opportunités de promotion de <strong>45%</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Objectifs Personnels -->
+  <div *ngIf="viewMode === 'goals'" class="goals-view">
+    <div class="goals-header">
+      <h3>🎯 Mes Objectifs de Développement</h3>
+      <button class="add-goal-btn">+ Nouvel Objectif</button>
+    </div>
+
+    <div class="goals-grid">
+      <div *ngFor="let goal of personalGoals" class="goal-card">
+        <div class="goal-header">
+          <h4>{{ goal.title }}</h4>
+          <span class="goal-priority" [class]="goal.priority">{{ goal.priority }}</span>
+        </div>
+        
+        <div class="goal-content">
+          <p>{{ goal.description }}</p>
+          <div class="goal-progress">
+            <div class="progress-info">
+              <span>Progression: {{ goal.progress }}%</span>
+              <span>Échéance: {{ goal.targetDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="goal.progress"></div>
             </div>
           </div>
           
-          <div class="module-time">
-            <div class="time-info">
-              <span class="time-spent">⏱️ {{ module.timeSpent }}h passées</span>
-              <span class="time-target">🎯 {{ module.targetTime }}h objectif</span>
-            </div>
-            <div class="time-progress">
-              <div 
-                class="time-bar" 
-                [style.width.%]="(module.timeSpent / module.targetTime) * 100"
-                [class.over-target]="module.timeSpent > module.targetTime">
-              </div>
-            </div>
+          <div class="goal-actions">
+            <button class="update-btn" (click)="setGoalProgress(goal.id, goal.progress + 10)">
+              Mettre à jour
+            </button>
+            <button class="plan-btn">
+              Plan d'action
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Cards View -->
-  <div *ngIf="viewMode === 'cards'" class="cards-view" @fadeInOut>
-    <div class="cards-grid">
-      <div 
-        *ngFor="let kpi of filteredKpiMetrics" 
-        class="metric-card"
-        @scaleIn>
-        <div class="card-content">
-          <div class="metric-header">
-            <span class="metric-icon">{{ kpi.icon }}</span>
-            <span class="metric-category">{{ kpi.category }}</span>
+    <!-- Suggestions d'objectifs -->
+    <div class="goal-suggestions">
+      <h4>💡 Objectifs Suggérés</h4>
+      <div class="suggestions-list">
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🏆</span>
+          <div class="suggestion-content">
+            <h5>Certification Kubernetes</h5>
+            <p>Recommandé pour votre parcours DevOps</p>
           </div>
-          <h3 class="metric-title">{{ kpi.label }}</h3>
-          <div class="metric-value">{{ kpi.value }}{{ kpi.unit }}</div>
-          <div class="metric-target">Objectif: {{ kpi.target }}{{ kpi.unit }}</div>
-          <div class="metric-trend">
-            {{ getTrendIcon(kpi.trend) }} {{ kpi.trendValue }}%
+          <button class="add-suggestion-btn">Ajouter</button>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">👑</span>
+          <div class="suggestion-content">
+            <h5>Leadership Agile</h5>
+            <p>Préparez-vous au rôle de Scrum Master</p>
           </div>
+          <button class="add-suggestion-btn">Ajouter</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Table View -->
-  <div *ngIf="viewMode === 'table'" class="table-view" @fadeInOut>
-    <div class="table-container">
-      <table class="metrics-table">
-        <thead>
-          <tr>
-            <th>Indicateur</th>
-            <th>Valeur Actuelle</th>
-            <th>Objectif</th>
-            <th>Tendance</th>
-            <th>Catégorie</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let kpi of filteredKpiMetrics">
-            <td>
-              <span class="table-icon">{{ kpi.icon }}</span>
-              {{ kpi.label }}
-            </td>
-            <td class="value-cell">{{ kpi.value }}{{ kpi.unit }}</td>
-            <td class="target-cell">{{ kpi.target }}{{ kpi.unit }}</td>
-            <td class="trend-cell">
-              <span class="trend-indicator" [class]="'trend-' + kpi.trend">
-                {{ getTrendIcon(kpi.trend) }} {{ kpi.trendValue }}%
-              </span>
-            </td>
-            <td class="category-cell">{{ kpi.category }}</td>
-            <td class="description-cell">{{ kpi.description }}</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
